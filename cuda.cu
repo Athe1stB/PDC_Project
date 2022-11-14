@@ -165,7 +165,7 @@ int main(){
 	cout<<endl;
 
 
-	//Multi-threading (A*B in parallel using pthreads)
+	//Multi-threading (A*B in parallel using CUDA)
 	//Memory allocation in GPU
 	int* d_csr_rows;
 	cudaMalloc(&d_csr_rows, (n+1)*sizeof(int));
