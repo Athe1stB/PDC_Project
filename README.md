@@ -1,6 +1,35 @@
 # PDC_Project
 
-##MPI
+## Sequential
+
+**Compile**
+	
+	g++ sequential.cpp
+
+**Run**
+	
+	./a.out
+
+## Pthread
+	
+**Compile**
+	
+	g++ pthread_algo1.cpp -lpthread
+
+**Run**
+
+	./a.out
+
+## OpenMP
+
+**Compile**
+	g++ openmp_algo1.cpp -fopenmp
+
+**Run**
+	./a.out
+
+
+## MPI
 
 **Install MPI**
 
