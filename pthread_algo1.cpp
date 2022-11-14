@@ -13,6 +13,7 @@ vector<double> ans;
 vector<double> ansSequential;
 int n;
 
+pthread_mutex_t lockk;
 
 //sequential multiplication
 void sequentialMulti(){
@@ -20,7 +21,9 @@ void sequentialMulti(){
 		int x = csr_rows[i];
 		int y = csr_rows[i+1];
 		for(int j = x; j < y; j++){
+			pthread_mutex_lock(&lockk);
 			ansSequential[i] += (csr_vals[j] * B[csr_col[j]]);
+			pthread_mutex_unlock(&lockk);
 		}
 	}
 }
@@ -108,6 +111,9 @@ int main(){
 
 	ans.resize(r, 0.0);
 
+	//initialize lock
+	pthread_mutex_init(&lockk, NULL);
+	
 	//Multi-threading (A*B in parallel using pthreads)
 	pthread_t th_id[MAX_THREADS];
 	for(int i = 0; i < MAX_THREADS; i++){

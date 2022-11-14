@@ -17,6 +17,9 @@ vector<int> column, rowOffset;
 // store matrices a, b and answer matrix.
 vector<double> b, ans, ansSequential;
 
+// define lock
+pthread_mutex_t lockk;
+
 void sequential()
 {
     ansSequential.assign(n,0);
@@ -48,7 +51,10 @@ void *calculateRowsRange(void *threadID)
         auto rp = lower_bound(rowOffset.begin(), rowOffset.end(), i+1) - rowOffset.begin();
         int r = rp-1;
         
+        // critical section
+        pthread_mutex_lock(&lockk);
         ans[r]+= value[i] * b[c];
+        pthread_mutex_unlock(&lockk);
     }
 }
 
@@ -113,6 +119,9 @@ void solve(int threads)
     }
     
     inputVector.close();
+    
+    //inititalize lock
+    pthread_mutex_init(&lockk, NULL);
     
     pthread_t th[NUM_THREADS];
     
