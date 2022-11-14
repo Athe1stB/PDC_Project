@@ -26,17 +26,6 @@ void sequentialMulti(){
 	}
 }
 
-//multiplication using parallel programming where every thread performs (row/MAX_THREADS) operations in parallel.
-void parallelMulti(long long var){
-	long long k = (long long)var;
-	for(int i = k; i < n; i += MAX_THREADS){
-		int x = csr_rows[i];
-		int y = csr_rows[i+1];
-		for(int j = x; j < y; j++){
-			ans[i] += (csr_vals[j] * B[csr_col[j]]);
-		}
-	}
-}
 
 int main(){
 	auto start = high_resolution_clock::now();
@@ -106,16 +95,20 @@ int main(){
 	//calculating A*B sequentially
 	sequentialMulti();
 
+
 	ans.resize(r, 0.0);
 
 	//Multi-threading (A*B in parallel using openmp)
-	#pragma omp parallel num_threads(MAX_THREADS)
-    {
-        long long numt = omp_get_num_threads();
-        long long tid = omp_get_thread_num();
-        
-        parallelMulti(tid);
-    }   
+	#pragma openmp parallel num_threads(MAX_THREADS) for
+	{
+		for(int i = 0; i < n; i++){
+			int x = csr_rows[i];
+			int y = csr_rows[i+1];
+			for(int j = x; j < y; j++){
+				ans[i] += (csr_vals[j] * B[csr_col[j]]);
+			}
+		}
+	}
 
 	//printing sequential answer
 	cout<<"Sequential answer: \n";
@@ -141,7 +134,7 @@ int main(){
 
 	//for time calculation
 	auto stop = high_resolution_clock::now();
-	float duration = duration_cast<nanoseconds>(stop - start).count();
+	double duration = duration_cast<nanoseconds>(stop - start).count();
 	duration *= 1e-9;
 	cout<<"Time Taken using "<<MAX_THREADS<<" threads: "<<fixed<<duration<<setprecision(9)<<" sec"<<endl;
 }
