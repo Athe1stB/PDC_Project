@@ -23,9 +23,11 @@
 ## OpenMP
 
 **Compile**
+
 	g++ openmp_algo1.cpp -fopenmp
 
 **Run**
+
 	./a.out
 
 
