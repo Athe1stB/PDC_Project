@@ -31,6 +31,9 @@ struct ds{
     int *column, *rowOffset; 
 };
 
+// define lock
+pthread_mutex_t lockk;
+
 // constructor for the data structure to initialize with values
 struct ds* construct(long long a, int b, int c, int d, float *x, float *y, int *xx, int *yy, float *zz)
 {
@@ -77,7 +80,9 @@ void *calculateRowsRange(void *arg)
         
         int r = low-1;
         
+        pthread_mutex_lock(&lockk);
         d->ans[d->index + r]+= d->value[i] * d->b[c];
+        pthread_mutex_unlock(&lockk);
     }
 }
 
@@ -123,6 +128,9 @@ int main()
 
     // Creation of parallel processes
     MPI_Init(NULL, NULL);
+    
+    //inititalize lock
+    pthread_mutex_init(&lockk, NULL);
 
     // find out process ID, and how many processes were started
     MPI_Comm_rank(MPI_COMM_WORLD, &pid);

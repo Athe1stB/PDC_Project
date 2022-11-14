@@ -75,8 +75,10 @@ void calculateRowsRange(struct ds* d)
         }
         
         int r = low-1;
-        
-        d->ans[d->index + r]+= d->value[i] * d->b[c];
+        #pragma omp critical
+        {
+            d->ans[d->index + r]+= d->value[i] * d->b[c];
+        }
     }
 }
 

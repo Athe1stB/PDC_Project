@@ -21,7 +21,10 @@ void sequentialMulti(){
 		int x = csr_rows[i];
 		int y = csr_rows[i+1];
 		for(int j = x; j < y; j++){
-			ansSequential[i] += (csr_vals[j] * B[csr_col[j]]);
+			#pragma omp critical
+			{
+				ansSequential[i] += (csr_vals[j] * B[csr_col[j]]);
+			}
 		}
 	}
 }
