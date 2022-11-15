@@ -9,7 +9,7 @@
 int n, n_total;
 
 // defining the number of threads
-int NUM_THREADS = 4;
+int NUM_THREADS = 16;
 
 // arrays to store the sparse matrix in CSR format [value, column and rowOffset]
 float *value;
@@ -198,6 +198,7 @@ int main()
         int index, i;
         elements_per_process = n / np;
         
+        double startTime = MPI_Wtime();
         // check if more than 1 processes are running
         if(np > 1)
         {
@@ -250,6 +251,8 @@ int main()
             int sender = status.MPI_SOURCE;
         }
         
+        double endTime = MPI_Wtime();
+        
         // output the dense vector
         printf("The input dense vector is: \n");
         for(int i=0; i<n; i++)printf("%f ",b[i]); printf("\n\n");
@@ -272,6 +275,7 @@ int main()
         }
         
         printf((correct?"***Correct***\n\n":"***InCorrect***\n\n"));
+        printf("Time taken: %f seconds\n\n", endTime-startTime);
     }
     // slave processes
     else
