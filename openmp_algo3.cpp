@@ -58,7 +58,6 @@ void calculateRowsRange(int thID)
 
 void solve(int threads)
 {
-    auto start = chrono::high_resolution_clock::now();
     
     NUM_THREADS = threads;
     
@@ -117,6 +116,8 @@ void solve(int threads)
     }
     
     inputVector.close();
+
+	auto start = chrono::high_resolution_clock::now();
     
     // calculate in parallel
     #pragma omp parallel num_threads(NUM_THREADS)

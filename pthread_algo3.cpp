@@ -60,7 +60,6 @@ void *calculateRowsRange(void *threadID)
 
 void solve(int threads)
 {
-    auto start = chrono::high_resolution_clock::now();
     
     NUM_THREADS = threads;
     
@@ -122,6 +121,8 @@ void solve(int threads)
     
     //inititalize lock
     pthread_mutex_init(&lockk, NULL);
+    
+    auto start = chrono::high_resolution_clock::now();
     
     pthread_t th[NUM_THREADS];
     

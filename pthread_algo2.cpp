@@ -42,7 +42,6 @@ void* parallelMulti(void *var){
 }
 
 int main(){
-	auto start = high_resolution_clock::now();
 	cout<<"Enter number of threads: ";
 	cin>>MAX_THREADS;
 	vector<double> vals;
@@ -112,6 +111,7 @@ int main(){
 
 	ans.resize(r, 0.0);
 
+	auto start = high_resolution_clock::now();
 	//Multi-threading (A*B in parallel using pthreads)
 	pthread_t th_id[MAX_THREADS];
 	for(int i = 0; i < MAX_THREADS; i++){
@@ -120,6 +120,8 @@ int main(){
 	for(int i = 0; i < MAX_THREADS; i++){
         pthread_join(th_id[i], NULL);
 	}
+
+	auto stop = high_resolution_clock::now();
 
 	//printing sequential answer
 	cout<<"Sequential answer: \n";
@@ -144,7 +146,6 @@ int main(){
 	cout<<"\n";
 
 	//for time calculation
-	auto stop = high_resolution_clock::now();
 	double duration = duration_cast<nanoseconds>(stop - start).count();
 	duration *= 1e-9;
 	cout<<"Time Taken using "<<MAX_THREADS<<" threads: "<<fixed<<duration<<setprecision(9)<<" sec"<<endl;

@@ -42,7 +42,6 @@ void parallelMulti(long long var){
 }
 
 int main(){
-	auto start = high_resolution_clock::now();
 	cout<<"Enter number of threads: ";
 	cin>>MAX_THREADS;
 	vector<double> vals;
@@ -110,6 +109,8 @@ int main(){
 	sequentialMulti();
 
 	ans.resize(r, 0.0);
+	
+	auto start = high_resolution_clock::now();
 
 	//Multi-threading (A*B in parallel using openmp)
 	#pragma omp parallel num_threads(MAX_THREADS)
@@ -119,6 +120,8 @@ int main(){
         
         parallelMulti(tid);
     }   
+    
+    auto stop = high_resolution_clock::now();
 
 	//printing sequential answer
 	cout<<"Sequential answer: \n";
@@ -143,7 +146,6 @@ int main(){
 	cout<<"\n";
 
 	//for time calculation
-	auto stop = high_resolution_clock::now();
 	float duration = duration_cast<nanoseconds>(stop - start).count();
 	duration *= 1e-9;
 	cout<<"Time Taken using "<<MAX_THREADS<<" threads: "<<fixed<<duration<<setprecision(9)<<" sec"<<endl;

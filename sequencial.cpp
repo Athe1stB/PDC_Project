@@ -30,7 +30,6 @@ void sequential()
 
 void solve()
 {
-    auto start = chrono::high_resolution_clock::now();
     
     // read the sparse matrix from file
     ifstream inputMatrix("inputfile.mtx");
@@ -79,7 +78,8 @@ void solve()
     }
     
     inputVector.close();
-    
+	    
+	auto start = chrono::high_resolution_clock::now();	
     sequential();       
              
     auto end = chrono::high_resolution_clock::now();
