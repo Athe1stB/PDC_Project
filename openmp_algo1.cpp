@@ -13,7 +13,8 @@ vector<int> B;
 vector<double> ans;
 vector<double> ansSequential;
 int n;
-
+int m;
+int valCount;
 
 //sequential multiplication
 void sequentialMulti(){
@@ -21,10 +22,7 @@ void sequentialMulti(){
 		int x = csr_rows[i];
 		int y = csr_rows[i+1];
 		for(int j = x; j < y; j++){
-			#pragma omp critical
-			{
-				ansSequential[i] += (csr_vals[j] * B[csr_col[j]]);
-			}
+			ansSequential[i] += (csr_vals[j] * B[csr_col[j]]);
 		}
 	}
 }
@@ -36,7 +34,11 @@ void parallelMulti(long long var){
 		int x = csr_rows[i];
 		int y = csr_rows[i+1];
 		for(int j = x; j < y; j++){
-			ans[i] += (csr_vals[j] * B[csr_col[j]]);
+			//critical section
+			#pragma omp critical
+			{
+				ans[i] += (csr_vals[j] * B[csr_col[j]]);
+			}
 		}
 	}
 }
@@ -61,6 +63,8 @@ int main(){
 	//reading number of rows, cols, and non-zero values.
 	file>>r>>c>>nz;
 	n = r;
+	m = c;
+	valCount = nz;
 	A.resize(r, vector<double>(c, 0.0));
 
 	//storing data in matrix
@@ -75,10 +79,10 @@ int main(){
 	file.close();
 
 	//converting coo format to csr with 3 arrays: values, columns and number of non zero values till a particular row
-	csr_vals.resize(nz, 0);
-	csr_col.resize(c, 0);
+	csr_vals.resize(valCount, 0);
+	csr_col.resize(valCount, 0);
 	csr_rows.resize(r+1, 0);
-	for(int i = 0; i < nz; i++){
+	for(int i = 0; i < valCount; i++){
 		csr_vals[i] = vals[i];
 		csr_col[i] = col[i]-1;
 		csr_rows[rows[i]]++;
@@ -97,7 +101,7 @@ int main(){
 
 	//printing the dense vector
 	cout<<"Dense Vector:\n";
-	for(int i = 0; i < B.size(); i++){
+	for(int i = 0; i < m; i++){
 		cout<<B[i]<<" ";	
 	}
 	cout<<"\n";

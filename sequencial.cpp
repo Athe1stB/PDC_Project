@@ -5,7 +5,7 @@ using namespace std;
 #define nline "\n"
 
 // defining the dimensions of the matrix.
-int n;
+int n, m, valCount;
 
 // arrays to store the sparse matrix in CSR format [value, column and rowOffset]
 vector<double> value;
@@ -17,6 +17,7 @@ vector<double> b, ansSequential;
 void sequential()
 {
     ansSequential.assign(n,0);
+    // calculate answer at ith index of answer array
     for(int i=0; i<n; i++)
     {
         ansSequential[i] = 0;
@@ -38,10 +39,12 @@ void solve()
     while (inputMatrix.peek() == '%') inputMatrix.ignore(2048, '\n');
     inputMatrix >> num_row>> num_col >> num_lines;    
     n = num_row;
+    m = num_col;
+    valCount = num_lines;
     
     // initialize all arrays
-    value.assign(num_lines,0);
-    column.assign(num_lines,0);
+    value.assign(valCount,0);
+    column.assign(valCount,0);
     rowOffset.assign(n+1,0);
     
     for(int l = 0; l < num_lines; l++)

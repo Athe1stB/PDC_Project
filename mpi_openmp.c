@@ -7,7 +7,7 @@
 #include <omp.h>
 
 // defining the dimensions of the matrix.
-int n, n_total;
+int n, n_total, m, m_total, valCount;
 
 // defining the number of threads
 int NUM_THREADS = 4;
@@ -132,17 +132,19 @@ int main()
         FILE *inputMatrix;
         inputMatrix = fopen("inputfile.mtx", "r");
         
-        int m, num_lines;
+        int num_lines;
         fscanf(inputMatrix, "%d", &n);
         fscanf(inputMatrix, "%d", &m);
         fscanf(inputMatrix, "%d", &num_lines);
         
+        valCount = num_lines;
+        
         // initialize all the matrices with the input dimension
         ans = (float*)calloc(n, sizeof(float));
-        value = (float*)calloc(n, sizeof(float));
-        column = (int*)calloc(n, sizeof(int));
+        value = (float*)calloc(valCount, sizeof(float));
+        column = (int*)calloc(valCount, sizeof(int));
         rowOffset = (int*)calloc((n+3), sizeof(int));
-        b = (float*)calloc(n, sizeof(float));
+        b = (float*)calloc(m, sizeof(float));
         
         for(int l = 0; l < num_lines; l++)
         {
@@ -179,7 +181,7 @@ int main()
             exit (0);
         }
 
-        for(int i=0; i<n; i++)
+        for(int i=0; i<m; i++)
             fscanf(inputVector, "%f, ", &b[i]);
         
         fclose(inputVector);
@@ -200,23 +202,25 @@ int main()
                 MPI_Send(&elements_per_process, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(&index, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+                MPI_Send(&m, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(&rowOffset[0], n+3, MPI_INT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(&column[index], elements_per_process, MPI_INT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(&value[index], elements_per_process, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
-                MPI_Send(&b[0], n, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
+                MPI_Send(&b[0], m, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
             }
 
             // last process adds remaining elements
             index = i * elements_per_process;
-            int elements_left = n - index;
+            int elements_left = valCount - index;
 
             MPI_Send(&elements_left, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
             MPI_Send(&index, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
             MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+            MPI_Send(&m, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
             MPI_Send(&rowOffset[0], n+3, MPI_INT, i, 0, MPI_COMM_WORLD);
             MPI_Send(&column[index], elements_left, MPI_INT, i, 0, MPI_COMM_WORLD);
             MPI_Send(&value[index], elements_left, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
-            MPI_Send(&b[0], n, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
+            MPI_Send(&b[0], m, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
         }
             
         // master process operates on its own partial answer in parallel
@@ -227,10 +231,7 @@ int main()
         
         for(i = 1; i < np; i++)
         {
-            MPI_Recv(&tmp, n, MPI_FLOAT,
-                    MPI_ANY_SOURCE, 0,
-                    MPI_COMM_WORLD,
-                    &status);
+            MPI_Recv(&tmp, n, MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
             
             // add partial answer to final ans
             for(int j=0; j<n; j++)
@@ -241,7 +242,7 @@ int main()
         
         // output the dense vector
         printf("The input dense vector is: \n");
-        for(int i=0; i<n; i++)printf("%f ",b[i]); printf("\n\n");
+        for(int i=0; i<m; i++)printf("%f ",b[i]); printf("\n\n");
         
         // output final answer using distributed computing
         printf("The final answer is: \n");
@@ -269,10 +270,11 @@ int main()
         MPI_Recv(&n_elements_recieved, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&index2, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&n_total, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&m_total, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&rowOffset2, n_total+3, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&column2, n_elements_recieved, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&value2, n_elements_recieved, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&b2, n_total, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&b2, m_total, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &status);
 
         // calculates partial answer for the current child process
         float* partial_ans = (float*)calloc(n_total, sizeof(float));
@@ -281,8 +283,7 @@ int main()
         calculatePartialAnswerParallel(index2, n_elements_recieved, n_total, value2, b2, column2, rowOffset2, partial_ans);
         
         // sends the partial answe to the root process
-        MPI_Send(&partial_ans[0], n_total, MPI_FLOAT,
-                0, 0, MPI_COMM_WORLD);
+        MPI_Send(&partial_ans[0], n_total, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
     }
 
     // cleans up all MPI state before exit of process

@@ -9,6 +9,8 @@ int NUM_THREADS = 1;
 
 // defining the dimensions of the matrix.
 int n;
+int m;
+int valCount;
 
 // arrays to store the sparse matrix in CSR format [value, column and rowOffset]
 vector<double> value;
@@ -77,14 +79,16 @@ void solve(int threads)
     while (inputMatrix.peek() == '%') inputMatrix.ignore(2048, '\n');
     inputMatrix >> num_row>> num_col >> num_lines;    
     n = num_row;
+    m = num_col;
+    valCount = num_lines;
     
     // initialize all arrays
     ans.assign(n,0.0);
-    value.assign(num_lines,0);
-    column.assign(num_lines,0);
+    value.assign(valCount,0);
+    column.assign(valCount,0);
     rowOffset.assign(n+1,0);
     
-    for(int l = 0; l < num_lines; l++)
+    for(int l = 0; l < valCount; l++)
     {
         double val;
         int r, c;
