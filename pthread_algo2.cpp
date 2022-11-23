@@ -2,7 +2,7 @@
 using namespace std;
 using namespace std::chrono;
 
-int MAX_THREADS;
+#define MAX_THREADS 4
 
 vector<vector<double>> A;
 vector<double> csr_vals;
@@ -42,8 +42,6 @@ void* parallelMulti(void *var){
 }
 
 int main(){
-	cout<<"Enter number of threads: ";
-	cin>>MAX_THREADS;
 	vector<double> vals;
 	vector<int> rows;
 	vector<int> col;
