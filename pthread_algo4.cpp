@@ -8,11 +8,11 @@ using namespace std;
 int NUM_THREADS = 1;
 
 // defining the dimensions of the matrix.
-int n;
+int n, m, valCount;
 
 // arrays to store the sparse matrix in CSR format [value, column and rowOffset]
 vector<double> value;
-vector<int> column, rowOffset;
+vector<int> column, row, rowOffset;
 
 // store matrices a, b and answer matrix.
 vector<double> b, ans, ansSequential;
@@ -37,27 +37,18 @@ void sequential()
     }
 }
 
+struct data{
+    int thID;
+    int pow;
+};
+
 // this function will calculate prefix sum using hillis algorithm
 void *hillis(void *arg)
 {
-    // cout << rowOffset[100] << '\n';
-    long long thID = (long long)arg;
+    struct data *d = ((struct data*)arg);
+    int tid = d->thID, pow = d->pow;
     
-    int L = log2(n+1), step = 1;
-    for(int j=0; j<L; j++)
-    {
-        pthread_barrier_wait(&barrier);
-        
-        int idx = thID + 1;
-        if((idx<n+1) and (idx-step>=0))
-        {
-            pthread_mutex_lock(&barrierLock);
-            rowOffset[idx]+=rowOffset[idx-step];
-            pthread_mutex_unlock(&barrierLock);
-        }
-        
-        step*=2;
-    }
+    rowOffset[tid+pow]+= row[tid];
 }
 
 // this function will sum up the answer for lth row to (r-1)th element of matrix 1.
@@ -106,13 +97,14 @@ void solve(int threads)
     while (inputMatrix.peek() == '%') inputMatrix.ignore(2048, '\n');
     inputMatrix >> num_row>> num_col >> num_lines;    
     n = num_row;
+    m = num_col;
+    valCount = num_lines;
     
     // initialize all arrays
     ans.assign(n,0.0);
     value.assign(num_lines,0);
     column.assign(num_lines,0);
-    rowOffset.assign(n+1,0);
-    
+    row.assign(n+1,0);    
     
     for(int l = 0; l < num_lines; l++)
     {
@@ -123,29 +115,40 @@ void solve(int threads)
         //storing in csr format
         value[l] = val;
         column[l] = (c-1);
-        rowOffset[r]++;
+        row[r]++;
     }
     
     cout<<"The number of rows are: "<<num_row<<"\nThe number of columns are: "<<num_col<<"\nThe number of threads are: "<<NUM_THREADS<<nline;
 
     inputMatrix.close();
     
-    // make rowOffset by prefix sum using Hillis Algorithm        
-    pthread_t ht[n];
+    int pow = 1;
     
-    // initialize barrier
-    pthread_barrier_init(&barrier,NULL, n);
+    rowOffset = row;
     
-    for(int i=0; i<n; i++)
-        pthread_create(&ht[i], NULL, hillis, (void *)i);
-    
-    for(int i=0; i<n; i++)
-        pthread_join(ht[i], NULL);
-    
-    // for(int i=0; i<n+1; i++) {
-    //     // rowOffset[i]+=rowOffset[i-1];
-    //     cout << rowOffset[i]<<"\n";
-    // }
+    // for each stride we are working on it
+    while(pow<n+1)
+    {
+        int n_threads = n+1-pow;
+        
+        // make rowOffset by prefix sum using Hillis Algorithm        
+        pthread_t ht[n_threads];
+        
+        for(int i=0; i<n_threads; i++)
+        {
+            struct data *s = (struct data*)malloc(sizeof (struct data));
+            s->thID = i;
+            s->pow = pow;
+            pthread_create(&ht[i], NULL, hillis, (void *)s);
+        }
+        
+        for(int i=0; i<n_threads; i++)
+            pthread_join(ht[i], NULL);
+        
+        row = rowOffset;
+        
+        pow*=2;
+    }
     
     // read the vector from file
     string s, temp="";
